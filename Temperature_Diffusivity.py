@@ -241,7 +241,7 @@ def plot_timestep(selected_timestep):
 
     ax.set_xlabel('Number of Sections')
     ax.set_yticks([])  
-    ax.set_title(f'Pressure Distribution at Timestep {selected_timestep}')
+    ax.set_title(f'Temperature Distribution at Timestep {selected_timestep}')
 
     plot_placeholder.pyplot(fig)
 
@@ -252,3 +252,4 @@ if auto_play:
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
+
