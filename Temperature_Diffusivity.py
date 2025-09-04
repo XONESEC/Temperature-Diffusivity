@@ -108,11 +108,13 @@ st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left(
 \frac{T_{i+1}^{\,l} - 2T_{i}^{\,l} + T_{i-1}^{\,l}}{\Delta x^2} \right), \quad 1 \leq i \leq N-1''')
 
 st.subheader("Neumann Boundary")
+st.write ("Left Boundary")
 st.latex(r'''\frac{\partial T}{\partial x}\Big|_{0} = q_L, \quad 
 T_{-i}^l = T_i^l - 2 q_L \Delta x''')
 st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left( 
 \frac{T_{i+1}^{\,l} - 2T_{i}^{\,l} + (T_{i+1}^l - 2 q_L \Delta x)}{\Delta x^2} \right)''')
 
+st.write ("Right Boundary")
 st.latex(r'''\frac{\partial T}{\partial x}\Big|_{x=L} = q_R, \quad 
 T_{i+1}^l = T_{i-1}^l + 2 q_R \Delta x''')
 st.latex(r'''T_i^{\,l+1} = T_i^{\,l} + \lambda \Delta t \left( 
@@ -251,3 +253,4 @@ if auto_play:
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
+
