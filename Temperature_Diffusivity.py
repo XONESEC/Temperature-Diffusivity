@@ -9,7 +9,7 @@ import time
 #----------------------------------------------------------------------------------------------------------------------
 
 # Heat Diffusivity
-st.header("**Heat Diffusivity with PDE Method**")
+st.header("**Temperature Diffusivity with PDE Method**")
 st.subheader("Input Parameter")
 input_parameter = '''In this section, the user is asked to input the values of variables that have been determined. The required variables are:
 
@@ -72,18 +72,20 @@ dt = st.sidebar.number_input("dt (second)",min_value=0, value=60)
 
 nt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 10)
 
-bc_type = st.sidebar.selectbox("Boundary Condition", ["Dirichlet", "Neumann"])
+bc_type = st.sidebar.segmented_control("Boundary Condition", ["Dirichlet", "Neumann"], selection_mode="single", default="Dirichlet")
+
+qL, qR = 10, 10
 
 if bc_type == "Dirichlet":
     T_left = T1
     T_right = Tn
 
 elif bc_type == "Neumann":
-    qL = st.sidebar.number_input("Left Boundary Gradient qL (K/m)", value=0.0, format="%.4f")
-    qR = st.sidebar.number_input("Right Boundary Gradient qR (K/m)", value=0.0, format="%.4f")
-
-    if qL != 0.0 and qR != 0.0:
-        st.write("For Neumann BC, either qL or qR must be 0")
+    Select_Boundary = st.sidebar.segmented_control ("Boundary", ["Left (qL)", "Right (qR)"])
+    if Select_Boundary == "Left (qL)":
+        qL = st.sidebar.number_input("Left Boundary Gradient qL (K/m)", value=100.0, format="%.4f")
+    elif Select_Boundary == "Right (qR)":
+        qR = st.sidebar.number_input("Right Boundary Gradient qR (K/m)", value=100.0, format="%.4f")
 
 dr = int(length/dx)
 
@@ -105,7 +107,7 @@ st.latex(r'''T_0^l = T_L, \quad T_i^l = T_R''')
 st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left( 
 \frac{T_{i+1}^{\,l} - 2T_{i}^{\,l} + T_{i-1}^{\,l}}{\Delta x^2} \right), \quad 1 \leq i \leq N-1''')
 
-st.subheader("Neuman Boundary")
+st.subheader("Neumann Boundary")
 st.latex(r'''\frac{\partial T}{\partial x}\Big|_{0} = q_L, \quad 
 T_{-i}^l = T_i^l - 2 q_L \Delta x''')
 st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left( 
@@ -125,28 +127,26 @@ alpha_value = alpha(k, Density, Cp, dt)
 
 temperature = np.zeros((nt+1, n+1))
 
-if bc_type == "Dirichlet":
+def TemperatureDiffusivity(nt, n, dx, alpha_value, bc_type, qR, qL):
+    for i in range(1, nt+1):
+        if bc_type == "Dirichlet":
+            temperature[0] = T0
+            temperature[:,0] = T1
+            temperature[:,-1] = Tn
 
-    temperature [0] = T0
-    temperature [:,0] = T1
-    temperature [:,-1] = Tn
+            for j in range(1, n):
+                temperature[i,j] = (
+                    temperature[i-1,j] 
+                    + (alpha_value / dx**2) * (
+                        temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]
+                    )
+                )
 
-    def TemperatureDiffusivity (nt, n, dx, alpha_value):
-        for i in range (0, nt+1):
-            for j in range (1, n):
-                if i == 0:
-                    temperature[i,j] = T0
-                else:
-                    temperature[i,j] = temperature[i-1,j] + ((alpha_value/dx**2)*(temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]))
-        return temperature
+        elif bc_type == "Neumann":
+            temperature[0] = T0
 
-elif bc_type == "Neumann":
-
-    temperature[0] = T0   
-
-    def TemperatureDiffusivity(nt, n, dx, alpha_value):
-        for i in range(1, nt+1):
-            if qL == 0:
+            # Left boundary
+            if Select_Boundary == "Left (qL)":
                 temperature[i,0] = temperature[i,1]
             else:
                 temperature[i,0] = (
@@ -157,17 +157,17 @@ elif bc_type == "Neumann":
                     )
                 )
 
-            if qR == 0:
+            # Right boundary
+            if Select_Boundary == "Right (qR)":
                 temperature[i,-1] = temperature[i,-2]
             else:
                 temperature[i,-1] = (
                     temperature[i-1,-1] 
-                    + (alpha_value / dx**2) * (
+                    + (alpha_value/ dx**2) * (
                         (temperature[i-1,-2] + 2*qR*dx) - 2*temperature[i-1,-1] 
                         + temperature[i-1,-2]
                     )
                 )
-
             for j in range(1, n):
                 temperature[i,j] = (
                     temperature[i-1,j] 
@@ -175,9 +175,8 @@ elif bc_type == "Neumann":
                         temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]
                     )
                 )
-        return temperature
-
-Result = TemperatureDiffusivity(nt, n, dx, alpha_value)
+    return temperature
+Result = TemperatureDiffusivity(nt, n, dx, alpha_value, bc_type, qR, qL)
 st.dataframe(Result)
 
 # Visualize Temperature Distribution
@@ -241,7 +240,7 @@ def plot_timestep(selected_timestep):
 
     ax.set_xlabel('Number of Sections')
     ax.set_yticks([])  
-    ax.set_title(f'Temperature Distribution at Timestep {selected_timestep}')
+    ax.set_title(f'Pressure Distribution at Timestep {selected_timestep}')
 
     plot_placeholder.pyplot(fig)
 
@@ -252,4 +251,3 @@ if auto_play:
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
-
