@@ -54,7 +54,7 @@ T0 =st.sidebar.number_input("T0 (K)", value=300.000, format="%.3f")
 
 T1 =st.sidebar.number_input("T1 (K)", value=200.000, format="%.3f")
 
-Tn =st.sidebar.number_input("Tn (K)", value=600.000, format="%.3f")
+Tn =st.sidebar.number_input("Tn (K)", value=100.000, format="%.3f")
 
 k =st.sidebar.number_input("k (W/m.K)", value=76.100, format="%.3f")
 
@@ -62,15 +62,15 @@ Density =st.sidebar.number_input("Density (Kg/m3)", value=7874.000, format="%.3f
 
 Cp = st.sidebar.number_input("Cp (J/Kg.K)", value = 450.000, format="%.3f")
 
-length = st.sidebar.number_input("Length (m)",min_value=0, value=1000)
+length = st.sidebar.number_input("Length (m)",min_value=0, value=100)
 
 n = st.sidebar.number_input("n (section)",min_value=0, value=10)
 
-dx = st.sidebar.number_input ("dx (m)", min_value = 0, value = 100 )
+dx = st.sidebar.number_input ("dx (m)", min_value = 0, value = 1 )
 
-dt = st.sidebar.number_input("dt (second)",min_value=0, value=60)
+dt = st.sidebar.number_input("dt (second)",min_value=0, value=3600)
 
-nt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 10)
+nt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 360)
 
 bc_type = st.sidebar.segmented_control("Boundary Condition", ["Dirichlet", "Neumann"], selection_mode="single", default="Dirichlet")
 
@@ -253,4 +253,5 @@ if auto_play:
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
+
 
