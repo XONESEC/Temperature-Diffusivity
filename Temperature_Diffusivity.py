@@ -44,7 +44,6 @@ output_parameter = '''In this section, the user will obtain output in the form o
 
 st.markdown(output_parameter)
 
-st.subheader("Model")
 # KASIH ILUSTRASI MODEL DALAM BENTUK GAMBAR
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -253,6 +252,7 @@ if auto_play:
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
+
 
 
 
