@@ -1,24 +1,24 @@
-# Temperature Diffusivity with PDE Method
-In this section, the user is asked to input the values of variables that have been determined. The required variables are:
+# Heat Equation with PDE Method
+In this section, the properties that will be used in the calculation are defined. The required properties are:
 
-* **T0**                  = initial Temperature (K)
+* **BC Left**       = Boundary condition value (°C for Dirichlet, °C/m for Neumann)
 
-* **T1**                  = Temperature at Location 1 (K)
+* **BC Right**      = Boundary condition value (°C for Dirichlet, °C/m for Neumann)
 
-* **Tn**                  = Temperature at Location n (K)
+* **T0**            = Initial temperature (°C)
 
-* **k**                   = Material Conductivity (W/m.K)
+* **K**             = Thermal conductivity (W/(m.K))
 
-* **Density**             = Material Density (Kg/m3)
+* **cp**            = Specific heat capacity (J/(kg.K))
 
-* **Cp**                  = Specific Heat Capacity (J/Kg.K))
+* **Density**       = Material density (kg/m3)
 
-* **Length**              = Distance (m)
+* **Alpha**         = Thermal diffusivity (m2/s)
 
-* **n (i)**               = the number of sections
+* **Lenght**        = Domain length (m)
 
-* **dx**                  = distance between each section (Lenght/Section)
+* **Grid number**   = Total grid
 
-* **dt**                  = time  (Second)
+* **Time**          = Total simulation duration (s)
 
-* **nt**                  = interval per time step
+* **dt**            = Time step size (s)
