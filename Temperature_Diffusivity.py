@@ -15,9 +15,9 @@ input_parameter = '''In this section, the user is asked to input the values of v
 
 * **T0**                  = initial Temperature (K)
 
-* **T1**                  = Temperature at Location 1 (K)
+* **TL**                  = Left boundary temperature (K)
 
-* **Tn**                  = Temperature at Location n (K)
+* **TR**                  = Rigt boundary temperature (K)
 
 * **k**                   = Material Conductivity (W/m.K)
 
@@ -29,7 +29,7 @@ input_parameter = '''In this section, the user is asked to input the values of v
 
 * **n (i)**               = the number of sections
 
-* **dx**                  = distance between each section (m)
+* **dx**                  = distance between each section (Length/Section)
 
 * **dt**                  = time  (Second)
 
@@ -44,16 +44,43 @@ output_parameter = '''In this section, the user will obtain output in the form o
 
 st.markdown(output_parameter)
 
+st.subheader("Model")
 # KASIH ILUSTRASI MODEL DALAM BENTUK GAMBAR
 #----------------------------------------------------------------------------------------------------------------------
 
 # Input Parameter
 st.sidebar.title("Input")
-T0 =st.sidebar.number_input("T0 (K)", value=300.000, format="%.3f")
 
-T1 =st.sidebar.number_input("T1 (K)", value=200.000, format="%.3f")
+bc_type = st.sidebar.segmented_control("Boundary Condition", ["Dirichlet", "Neumann"], selection_mode="single", default="Dirichlet")
 
-Tn =st.sidebar.number_input("Tn (K)", value=100.000, format="%.3f")
+qL, qR = 10, 10
+
+if bc_type == "Dirichlet":
+    Select_Boundary = st.sidebar.segmented_control ("Boundary", ["Left", "Right"], default="Left")
+    
+    if Select_Boundary == "Left":
+        # Dirichlet BC at Left
+        st.sidebar.write("Right Boundary Temperature = 0")
+        T0 =st.sidebar.number_input("T0 (K)", value=300.000, format="%.3f")
+        TL = st.sidebar.number_input("TL (K)", value=300.000, format="%.3f")
+        TR = 0
+
+    elif Select_Boundary == "Right":
+        # Dirichlet BC at Right
+        st.sidebar.write("Left Boundary Temperature = 0")
+        T0 =st.sidebar.number_input("T0 (K)", value=300.000, format="%.3f")
+        TR = st.sidebar.number_input("TR (K)", value=300.000, format="%.3f")
+        TL = 0
+
+elif bc_type == "Neumann":
+    Select_Boundary = st.sidebar.segmented_control ("Boundary", ["Left (qL)", "Right (qR)"])
+    T0 =st.sidebar.number_input("T0 (K)", value=300.000, format="%.3f")
+    if Select_Boundary == "Left (qL)":
+        qL = st.sidebar.number_input("Left Boundary Gradient qL (K/m)", value=100.0, format="%.4f")
+        TL, TR = 0, 0
+    elif Select_Boundary == "Right (qR)":
+        qR = st.sidebar.number_input("Right Boundary Gradient qR (K/m)", value=100.0, format="%.4f")
+        TL, TR = 0, 0
 
 k =st.sidebar.number_input("k (W/m.K)", value=76.100, format="%.3f")
 
@@ -61,32 +88,17 @@ Density =st.sidebar.number_input("Density (Kg/m3)", value=7874.000, format="%.3f
 
 Cp = st.sidebar.number_input("Cp (J/Kg.K)", value = 450.000, format="%.3f")
 
-length = st.sidebar.number_input("Length (m)",min_value=0, value=100)
+length = st.sidebar.number_input("Length (m)",min_value=0, value=1000)
 
 n = st.sidebar.number_input("n (section)",min_value=0, value=10)
 
-dx = st.sidebar.number_input ("dx (m)", min_value = 0, value = 1 )
+#dx = st.sidebar.number_input ("dx (m)", min_value = 0, value = 100 )
 
-dt = st.sidebar.number_input("dt (second)",min_value=0, value=3600)
+dt = st.sidebar.number_input("dt (second)",min_value=0, value=60)
 
-nt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 360)
+nt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 10)
 
-bc_type = st.sidebar.segmented_control("Boundary Condition", ["Dirichlet", "Neumann"], selection_mode="single", default="Dirichlet")
-
-qL, qR = 10, 10
-
-if bc_type == "Dirichlet":
-    T_left = T1
-    T_right = Tn
-
-elif bc_type == "Neumann":
-    Select_Boundary = st.sidebar.segmented_control ("Boundary", ["Left (qL)", "Right (qR)"])
-    if Select_Boundary == "Left (qL)":
-        qL = st.sidebar.number_input("Left Boundary Gradient qL (K/m)", value=100.0, format="%.4f")
-    elif Select_Boundary == "Right (qR)":
-        qR = st.sidebar.number_input("Right Boundary Gradient qR (K/m)", value=100.0, format="%.4f")
-
-dr = int(length/dx)
+dx = int(length/n)
 
 #----------------------------------------------------------------------------------------------------------------------
 
@@ -107,13 +119,11 @@ st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left(
 \frac{T_{i+1}^{\,l} - 2T_{i}^{\,l} + T_{i-1}^{\,l}}{\Delta x^2} \right), \quad 1 \leq i \leq N-1''')
 
 st.subheader("Neumann Boundary")
-st.write ("Left Boundary")
 st.latex(r'''\frac{\partial T}{\partial x}\Big|_{0} = q_L, \quad 
 T_{-i}^l = T_i^l - 2 q_L \Delta x''')
 st.latex(r'''T_{i}^{\,l+1} = T_{i}^{\,l} + \lambda \Delta t \left( 
 \frac{T_{i+1}^{\,l} - 2T_{i}^{\,l} + (T_{i+1}^l - 2 q_L \Delta x)}{\Delta x^2} \right)''')
 
-st.write ("Right Boundary")
 st.latex(r'''\frac{\partial T}{\partial x}\Big|_{x=L} = q_R, \quad 
 T_{i+1}^l = T_{i-1}^l + 2 q_R \Delta x''')
 st.latex(r'''T_i^{\,l+1} = T_i^{\,l} + \lambda \Delta t \left( 
@@ -132,16 +142,21 @@ def TemperatureDiffusivity(nt, n, dx, alpha_value, bc_type, qR, qL):
     for i in range(1, nt+1):
         if bc_type == "Dirichlet":
             temperature[0] = T0
-            temperature[:,0] = T1
-            temperature[:,-1] = Tn
 
-            for j in range(1, n):
-                temperature[i,j] = (
-                    temperature[i-1,j] 
-                    + (alpha_value / dx**2) * (
-                        temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]
-                    )
-                )
+            # Left Boundary
+            if Select_Boundary == "Left":
+                temperature[:,0] = TL
+                temperature[:,-1] = TR
+
+                for j in range(1, n):
+                    temperature[i,j] = (temperature[i-1,j] + (alpha_value / dx**2) * (temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]))
+            
+            #Right Boundary
+            else:
+                temperature[:,0] = TL
+                temperature[:,-1] = TR
+                for j in range(1, n):
+                    temperature[i,j] = (temperature[i-1,j] + (alpha_value / dx**2) * (temperature[i-1,j+1] - 2*temperature[i-1,j] + temperature[i-1,j-1]))
 
         elif bc_type == "Neumann":
             temperature[0] = T0
@@ -205,54 +220,60 @@ st.plotly_chart(fig, use_container_width=True)
 df = pd.DataFrame(Result.T)
 df.index.name = "Section"
 df = df.reset_index().melt(id_vars="Section", var_name="Timestep", value_name="Temperature")
+df["Timestep"] = df["Timestep"].astype(int)
+
 
 fig = px.line(
     df,
     x="Section",
     y="Temperature",
-    color="Timestep",
-    hover_data={"Section": True, "Temperature": True, "Timestep": True}
+    animation_frame="Timestep",   
+    range_y=[df["Temperature"].min(), df["Temperature"].max()],  
+    markers=True,
 )
 
 fig.update_layout(
     xaxis_title="Number of Sections",
-    yaxis_title="Temperature",
-    legend_title="Timestep",
-    height=600
+    yaxis_title="Temperature (K)",
+    height=600,
+    showlegend=False 
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
 # 2D Visualization 
-auto_play = st.checkbox("Auto Play", value=False)
-play_speed = st.slider("Play Speed ()", 0.1, 2.0, 0.5)
 
+auto_play = st.checkbox("Auto Play", value=False)
 plot_placeholder = st.empty()
+
+vmin, vmax = Result.min(), Result.max()
 
 def plot_timestep(selected_timestep):
     pressure_profile = Result[selected_timestep, :].reshape(1, -1)
 
     fig, ax = plt.subplots(figsize=(10, 2))
-    img = ax.imshow(pressure_profile, cmap='magma', aspect='auto',
-                    extent=[0, Result.shape[1], 0, 1])
+    img = ax.imshow(
+        pressure_profile,
+        cmap='magma',
+        aspect='auto',
+        extent=[0, Result.shape[1], 0, 1],
+        vmin=vmin,
+        vmax=vmax
+    )
 
     cbar = fig.colorbar(img, ax=ax, shrink=1.0, aspect=5)
     cbar.set_label('Temperature (K)')
 
     ax.set_xlabel('Number of Sections')
     ax.set_yticks([])  
-    ax.set_title(f'Temperature Distribution at Timestep {selected_timestep}')
+    ax.set_title(f'Pressure Distribution at Timestep {selected_timestep}')
 
     plot_placeholder.pyplot(fig)
 
 if auto_play:
     for t in range(nt):
         plot_timestep(t)
-        time.sleep(play_speed)
+        time.sleep(0.05) 
 else:
     selected_timestep = st.slider("Select Timestep", min_value=0, max_value=nt-1, value=0, step=1)
     plot_timestep(selected_timestep)
-
-
-
-
