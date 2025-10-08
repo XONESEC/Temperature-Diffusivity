@@ -17,7 +17,7 @@ In this section, the user is asked to input the values of variables that have be
 
 * **n (i)**               = the number of sections
 
-* **dx**                  = distance between each section (m)
+* **dx**                  = distance between each section (Lenght/Section)
 
 * **dt**                  = time  (Second)
 
