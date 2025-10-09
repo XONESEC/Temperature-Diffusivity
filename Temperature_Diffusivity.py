@@ -59,20 +59,20 @@ left_boundary =st.sidebar.radio("**Left Boundary :**",
                  ["Dirichlet",
                  "Neumann"])
 if left_boundary == "Dirichlet":
-    TL = st.sidebar.number_input("TL (K)", value=300.000, format="%.3f")
+    bc_left = st.sidebar.number_input("TL (K)", value=0.000, format="%.3f")
 
 elif left_boundary == "Neumann":
-    qL = st.sidebar.number_input(" qL (°C/m)", value=100.0, format="%.4f")   
+    bc_left = st.sidebar.number_input(" qL (°C/m)", value=0.000, format="%.4f")   
 
 #Right Boundary
 right_boundary =st.sidebar.radio("**Right Boundary :**",
                  ["Dirichlet",
                  "Neumann"])
 if right_boundary == "Dirichlet":
-    TR = st.sidebar.number_input("TR (K)", value=300.000, format="%.3f")
+    bc_right = st.sidebar.number_input("TR (K)", value=50.000, format="%.3f")
 
 elif right_boundary == "Neumann":
-    qR = st.sidebar.number_input(" qR (°C/m)", value=100.0, format="%.4f") 
+    bc_right = st.sidebar.number_input(" qR (°C/m)", value=50.000, format="%.4f") 
 
 st.sidebar.title("Solution")
 solution = st.sidebar.radio("**Solution :**",["Explicit", "Implicit"])
@@ -89,14 +89,11 @@ Cp = st.sidebar.number_input("Cp (J/Kg.K)", value = 510.000, format="%.3f")
 
 length = st.sidebar.number_input("Length (m)",min_value=0, value=10)
 
-n = st.sidebar.number_input("Grid number",min_value=0, value=100)
+section = st.sidebar.number_input("Grid number",min_value=0, value=100)
 
 total_time = st.sidebar.number_input("Total time",min_value=0, value=50000 )
 
 dt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 400)
-
-if dt == 0:
-    r_target =0.4
 
 alpha = int(k/(Density * Cp))
 
@@ -265,12 +262,16 @@ elif solution == "Implicit":
 
 # Calculation Heat Equation
 if solution == "Explicit":
-    def ftcs_heat_solver (alpha, length, n, total_time, dt, T0, 
-                          left_boundary, right_boundary):
+    def ftcs_heat_solver (alpha, length, grid_number, total_time, dt,
+                           T0, left_boundary, right_boundary):
 
         # === Discretization ===
-        grid_number = n
-        dx = length/n
+        grid_number = section
+
+        if dt == None:
+            r_target =0.4
+
+        dx = length/ grid_number
         if dt is None:
             dt = r_target * dx**2 /alpha
 
@@ -282,49 +283,49 @@ if solution == "Explicit":
             print(f"✅ Stable: r = {r:.3f}")
 
         # === Grid Setup ===
-        x = np.linspace(0, length, n+1)
+        x = np.linspace(0, length, grid_number + 1)
         nt = int(total_time / dt)
-        times = np.linspace(0, total_time, nt+1)
+        times = np.linspace(0, total_time, nt + 1)
 
         # === initialize Temperature ===
-        U = np.zeros((nt + 1, n +1))
-        U[0, :] = T0
+        U = np.zeros((nt + 1, grid_number +1), dtype=np.float64)
+        U[0, :] = float(T0)
 
         # === Time Marching ===
-        for n in range(0, nt):
+        for t in range(0, nt):
             for i in range (1, grid_number):
-                U[n + 1, i] = U[n, i] + r * (U[n, i + 1] - 2 * U[n, i] + U[n, i - 1])
+                U[t + 1, i] = U[t, i] + r * (U[t, i + 1] - 2 * U[t, i] + U[t, i - 1])
 
             # --- Left Boundary ---
             if left_boundary == "Dirichlet":
-                U[n + 1, 0] = TL
+                U[t + 1, 0] = bc_left
             elif left_boundary == "Neumann":
-                U[n + 1, 0] = U[n + 1, 1] - qL * dx
+                U[t + 1, 0] = U[t + 1, 1] - bc_left * dx
 
             # --- Right Boundary ---
             if right_boundary == "Dirichlet":
-                U[n + 1, -1] = TR
+                U[t + 1, -1] = bc_right
             elif right_boundary == "Neumann":
-                U[n + 1, -1] = U[n + 1, -2] + qR * dx
+                U[t + 1, -1] = U[t + 1, -2] + bc_right * dx
 
         return x, times, U
-    x, times, U = ftcs_heat_solver(alpha, length, n, total_time, dt, T0, 
+    x, times, U = ftcs_heat_solver(alpha, length, section, total_time, dt, T0, 
                                left_boundary, right_boundary)    
 elif solution == "Implicit":
-    def implicit_heat_solver(alpha, length, n, total_time, dt, T0, 
+    def implicit_heat_solver(alpha, length, section, total_time, dt, T0, 
                           left_boundary, right_boundary):
-        dx = length / n
-        x = np.linspace(0, length, n + 1)
+        dx = length / section
+        x = np.linspace(0, length, section + 1)
         nt = int(np.ceil(total_time / dt))
         times = np.linspace(0, nt * dt, nt + 1)
 
         r = alpha * dt / dx**2
 
         # --- Construct coefficien matrix A for implicit method ---
-        A = np.zeros((n + 1, n + 1))
+        A = np.zeros((section + 1, section + 1))
 
         # Internal nodes
-        for i in range (1, n):
+        for i in range (1, section):
             A[i, i-1] = -r
             A[i, i] = 1 + 2 * r
             A[i, i+1] = -r
@@ -347,14 +348,14 @@ elif solution == "Implicit":
             A[-1, -1] = 1 + 2 *r
 
         # --- Initialize temperature field ---
-        U = np.zeros((nt + 1, n + 1))
+        U = np.zeros((nt + 1, section + 1))
         U[0, :] = T0
 
         # Apply initial Dirichlet BCs
         if left_boundary == "Dirichlet":
-            U[0, 0] = TL
+            U[0, 0] = bc_left
         if right_boundary == "Dirichlet":
-            U[0, -1] = TR
+            U[0, -1] = bc_right
 
         # --- Time stepping
         for m in range (nt):
@@ -362,21 +363,21 @@ elif solution == "Implicit":
 
             # Adjust RHS for Neuman BCs
             if left_boundary == "Neumann":
-                b[0] += 2 * r * dx * qL
+                b[0] += 2 * r * dx * bc_left
             if right_boundary == "Neumann":
-                b[-1] += 2 * r * dx * qR
+                b[-1] += 2 * r * dx * bc_right
             
             # Enforce Dirichlet BCs in RHS
             if left_boundary == "Dirichlet":
-                b[0] = TL
+                b[0] = bc_left
             if right_boundary == "Dirichlet":
-                b[-1] = TR
+                b[-1] = bc_right
             
             # Solve implicit system
             U[m+1, :] = np.linalg.solve(A, b)
         
         return x, times, U
-    x, times, U  = implicit_heat_solver(alpha, length, n, total_time, dt,
+    x, times, U  = implicit_heat_solver(alpha, length, section, total_time, dt,
                                    T0, left_boundary, right_boundary)
 #----------------------------------------------------------------------------------------------------------------------
 
