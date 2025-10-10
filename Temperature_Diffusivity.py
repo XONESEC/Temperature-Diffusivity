@@ -59,7 +59,7 @@ left_boundary =st.sidebar.radio("**Left Boundary :**",
                  ["Dirichlet",
                  "Neumann"])
 if left_boundary == "Dirichlet":
-    bc_left = st.sidebar.number_input("TL (K)", value=0.000, format="%.3f")
+    bc_left = st.sidebar.number_input("TL (°C)", value=0.000, format="%.3f")
 
 elif left_boundary == "Neumann":
     bc_left = st.sidebar.number_input(" qL (°C/m)", value=0.000, format="%.4f")   
@@ -69,7 +69,7 @@ right_boundary =st.sidebar.radio("**Right Boundary :**",
                  ["Dirichlet",
                  "Neumann"])
 if right_boundary == "Dirichlet":
-    bc_right = st.sidebar.number_input("TR (K)", value=50.000, format="%.3f")
+    bc_right = st.sidebar.number_input("TR (°C)", value=50.000, format="%.3f")
 
 elif right_boundary == "Neumann":
     bc_right = st.sidebar.number_input(" qR (°C/m)", value=50.000, format="%.4f") 
@@ -531,5 +531,6 @@ else:
 
 # Dataframe
 st.dataframe(U)
+
 
 
