@@ -277,10 +277,6 @@ if solution == "Explicit":
 
         # === Stability Check ===
         r = alpha * dt / dx**2
-        if r > 0.5:
-            print(f"⚠️ Warning: Scheme unstable! r = {r:.3f} > 0.5")
-        else:
-            print(f"✅ Stable: r = {r:.3f}")
 
         # === Grid Setup ===
         x = np.linspace(0, length, grid_number + 1)
@@ -387,7 +383,12 @@ elif solution == "Implicit":
 
 # Visualize Temperature Distribution
 st.subheader("Visualize Temperature Distribution")
-
+dx = length / section
+r = alpha * dt / dx**2
+if r > 0.5:
+    st.write(f"⚠️ Warning: Scheme unstable! r = {r:.3f} > 0.5")
+else:
+    st.write(f"✅ Stable: r = {r:.3f}")
 # 3d Visulization
 x_mesh = np.arange(U.shape[1])   # Number of spatial sections
 y_mesh = np.arange(U.shape[0])   # Time steps
@@ -408,6 +409,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # Graph Visualization
+    
 df = pd.DataFrame(U.T)
 df.index.name = "Section"
 df = df.reset_index().melt(
@@ -437,6 +439,49 @@ transition_duration = 0  # tanpa efek transisi lambat
 
 fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = frame_duration
 fig.layout.updatemenus[0].buttons[0].args[1]['transition']['duration'] = transition_duration
+
+st.plotly_chart(fig, use_container_width=True)
+
+# Temperature vs Time
+fig = go.Figure()
+
+for j in range(U.shape[1]):
+    fig.add_trace(go.Scatter(
+        x=times,
+        y=U[:, j],
+        mode='lines',
+        line=dict(color='grey', width=0.8),
+        opacity=0.4,
+        showlegend=False
+    ))
+
+key_positions = [0, U.shape[1] // 2, -1]
+
+df = pd.DataFrame(U[:, key_positions], columns=[f"Cell {i+1}" for i in key_positions])
+df["Time"] = times
+df = df.melt(id_vars="Time", var_name="Position", value_name="Temperature")
+
+for pos in df["Position"].unique():
+    subset = df[df["Position"] == pos]
+    fig.add_trace(go.Scatter(
+        x=subset["Time"],
+        y=subset["Temperature"],
+        mode='lines+markers',
+        name=pos,
+        line=dict(width=2),
+        marker=dict(size=5)
+    ))
+
+fig.update_layout(
+    title="Temperature vs Time at Key Positions",
+    xaxis_title="Time (seconds)",
+    yaxis_title="Temperature (°C)",
+    height=600,
+    legend_title_text="Key Positions",
+    showlegend=True,
+)
+
+print("fig type:", type(fig))
 
 st.plotly_chart(fig, use_container_width=True)
 
