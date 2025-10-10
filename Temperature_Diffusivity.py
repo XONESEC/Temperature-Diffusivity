@@ -95,7 +95,7 @@ total_time = st.sidebar.number_input("Total time",min_value=0, value=50000 )
 
 dt =st.sidebar.number_input ("nt (time step)", min_value= 0, value= 400)
 
-alpha = int(k/(Density * Cp))
+alpha = k/(Density * Cp)
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -290,6 +290,7 @@ if solution == "Explicit":
         # === initialize Temperature ===
         U = np.zeros((nt + 1, grid_number +1), dtype=np.float64)
         U[0, :] = float(T0)
+        
 
         # === Time Marching ===
         for t in range(0, nt):
@@ -301,16 +302,19 @@ if solution == "Explicit":
                 U[t + 1, 0] = bc_left
             elif left_boundary == "Neumann":
                 U[t + 1, 0] = U[t + 1, 1] - bc_left * dx
+                
 
             # --- Right Boundary ---
             if right_boundary == "Dirichlet":
                 U[t + 1, -1] = bc_right
             elif right_boundary == "Neumann":
                 U[t + 1, -1] = U[t + 1, -2] + bc_right * dx
+                
 
         return x, times, U
     x, times, U = ftcs_heat_solver(alpha, length, section, total_time, dt, T0, 
-                               left_boundary, right_boundary)    
+                               left_boundary, right_boundary)
+        
 elif solution == "Implicit":
     def implicit_heat_solver(alpha, length, section, total_time, dt, T0, 
                           left_boundary, right_boundary):
@@ -478,3 +482,4 @@ else:
 
 # Dataframe
 st.dataframe(U)
+
