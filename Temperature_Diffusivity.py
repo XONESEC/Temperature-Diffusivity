@@ -456,20 +456,24 @@ for j in range(U.shape[1]):
     ))
 
 key_positions = [0, U.shape[1] // 2, -1]
+position_labels = ['Left', 'Middle', 'Right']
+colors = ['red', 'blue', 'green']
 
-df = pd.DataFrame(U[:, key_positions], columns=[f"Cell {i+1}" for i in key_positions])
-df["Time"] = times
-df = df.melt(id_vars="Time", var_name="Position", value_name="Temperature")
+df = pd.DataFrame({
+    "Time": np.tile(times, len(key_positions)),
+    "Temperature": np.concatenate([U[:, i] for i in key_positions]),
+    "Position": np.repeat(position_labels, len(times))
+})
 
-for pos in df["Position"].unique():
-    subset = df[df["Position"] == pos]
+for label, color in zip(position_labels, colors):
+    subset = df[df["Position"] == label]
     fig.add_trace(go.Scatter(
         x=subset["Time"],
         y=subset["Temperature"],
         mode='lines+markers',
-        name=pos,
-        line=dict(width=2),
-        marker=dict(size=5)
+        name=label,
+        line=dict(width=2, color=color),
+        marker=dict(size=5, color=color)
     ))
 
 fig.update_layout(
@@ -477,7 +481,7 @@ fig.update_layout(
     xaxis_title="Time (seconds)",
     yaxis_title="Temperature (°C)",
     height=600,
-    legend_title_text="Key Positions",
+    legend_title_text="Position",
     showlegend=True,
 )
 
